@@ -307,35 +307,35 @@ def prepare_inputs(pil_image):
 # ───────────────────────────────────────────────
 # SALIENCY  (integrated gradients — more visible than vanilla gradients)
 # ───────────────────────────────────────────────
-def compute_saliency(model, rgb_in, dct_in, steps=20):
+def compute_saliency(model, rgb_in, dct_in, steps=5):
     """
-    Integrated gradients from black baseline → input.
-    Produces far more visible heatmaps than single-step gradients.
+    SmoothGrad — averages gradients over a few noise-augmented inputs.
+    5 passes instead of 20, produces visible heatmaps, ~4x faster than
+    integrated gradients.
     """
     try:
-        baseline   = np.zeros_like(rgb_in)
-        alphas     = np.linspace(0, 1, steps)
-        grad_acc   = np.zeros_like(rgb_in)
+        noise_level = 0.1
+        grad_acc    = np.zeros(rgb_in.shape[:2], dtype=np.float32)
+        dct_t       = tf.constant(
+            np.expand_dims(dct_in, 0).astype(np.float32)
+        )
 
-        dct_t = tf.constant(np.expand_dims(dct_in, 0).astype(np.float32))
-
-        for alpha in alphas:
-            interp = baseline + alpha * (rgb_in - baseline)
-            rgb_t  = tf.Variable(np.expand_dims(interp, 0).astype(np.float32))
+        for _ in range(steps):
+            noise  = np.random.normal(0, noise_level, rgb_in.shape).astype(np.float32)
+            rgb_t  = tf.Variable(
+                np.expand_dims(rgb_in + noise, 0).astype(np.float32)
+            )
             with tf.GradientTape() as tape:
                 tape.watch(rgb_t)
                 preds = model([rgb_t, dct_t], training=False)
                 score = preds[:, 0]
             grads     = tape.gradient(score, rgb_t).numpy()[0]
-            grad_acc += grads
+            grad_acc += np.max(np.abs(grads), axis=-1)
 
-        # Integrated gradients attribution
-        ig         = (rgb_in - baseline) * grad_acc / steps
-        heatmap    = np.sum(np.abs(ig), axis=-1)
-        max_val    = float(np.max(heatmap))
+        max_val = float(np.max(grad_acc))
         if max_val > 0:
-            heatmap = heatmap / max_val
-        return heatmap
+            grad_acc = grad_acc / max_val
+        return grad_acc
     except Exception:
         return None
 
