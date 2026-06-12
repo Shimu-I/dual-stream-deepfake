@@ -14,247 +14,184 @@ import io
 # PAGE CONFIG
 # ───────────────────────────────────────────────
 st.set_page_config(
-    page_title="Beyond Binary Detection",
+    page_title="Deepfake Detector",
     page_icon="🔬",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # ───────────────────────────────────────────────
-# CSS  — refined forensic dark theme
+# CSS  — clean, minimal, readable
 # ───────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 :root {
-    --bg:       #080b12;
-    --surface:  #0e1320;
-    --border:   #1c2236;
-    --accent:   #4f8eff;
-    --fake:     #ff4466;
-    --real:     #00e676;
-    --muted:    #3a4060;
-    --text:     #cdd5f0;
-    --textdim:  #5a6280;
+    --bg:      #0d1117;
+    --surface: #161b22;
+    --border:  #30363d;
+    --accent:  #58a6ff;
+    --fake:    #f85149;
+    --real:    #3fb950;
+    --text:    #e6edf3;
+    --dim:     #8b949e;
 }
 
 html, body, [class*="css"] {
-    font-family: 'DM Sans', sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    font-size: 16px;
 }
 
-/* ── HEADER BAND ── */
-.hdr {
-    background: linear-gradient(135deg, #0a0f1e 0%, #0e1528 60%, #111a35 100%);
+/* hide streamlit chrome */
+#MainMenu, footer, header, .stDeployButton { visibility: hidden; }
+.block-container { padding: 2rem 2rem 2rem 2rem !important; max-width: 1100px; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+    padding: 2rem 0 2.5rem 0;
     border-bottom: 1px solid var(--border);
-    padding: 2.4rem 2rem 2rem 2rem;
-    margin: -1rem -1rem 2rem -1rem;
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 2.5rem;
 }
-.hdr::before {
-    content: '';
-    position: absolute;
-    top: -40px; right: -60px;
-    width: 320px; height: 320px;
-    background: radial-gradient(circle, rgba(79,142,255,0.08) 0%, transparent 70%);
-    pointer-events: none;
-}
-.hdr-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(79,142,255,0.1);
-    border: 1px solid rgba(79,142,255,0.25);
-    border-radius: 20px;
-    padding: 3px 12px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 2.5px;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 1rem;
-}
-.hdr-title {
-    font-family: 'Space Mono', monospace;
-    font-size: clamp(1.3rem, 2.5vw, 1.9rem);
+.page-title {
+    font-size: 1.75rem;
     font-weight: 700;
-    color: #ffffff;
-    line-height: 1.35;
+    color: var(--text);
     margin: 0 0 0.5rem 0;
-    letter-spacing: -0.5px;
+    line-height: 1.3;
 }
-.hdr-title .hl { color: var(--accent); }
-.hdr-sub {
-    font-size: 0.82rem;
-    color: var(--textdim);
-    font-weight: 300;
-    letter-spacing: 0.3px;
-}
-.hdr-sub a { color: var(--accent); text-decoration: none; opacity: 0.8; }
-.hdr-sub a:hover { opacity: 1; }
-.hdr-pill {
-    display: inline-block;
-    background: rgba(0,230,118,0.07);
-    border: 1px solid rgba(0,230,118,0.18);
-    color: var(--real);
-    border-radius: 4px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    padding: 2px 8px;
-    letter-spacing: 1.5px;
-    margin-left: 8px;
-    vertical-align: middle;
-    text-transform: uppercase;
+.page-sub {
+    font-size: 1rem;
+    color: var(--dim);
+    margin: 0;
+    line-height: 1.5;
 }
 
-/* ── SECTION LABELS ── */
-.slabel {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 3.5px;
+/* ── SECTION LABEL ── */
+.sec-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 0.9rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
 }
-.slabel::before {
-    content: '';
-    display: inline-block;
-    width: 3px; height: 12px;
-    background: var(--accent);
-    border-radius: 2px;
+
+/* ── INFO BOX ── */
+.info-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    font-size: 1rem;
+    color: var(--dim);
+    line-height: 1.7;
 }
 
 /* ── VERDICT CARD ── */
-.vcard {
+.verdict-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.8rem;
-    height: 100%;
+    border-radius: 10px;
+    padding: 2rem;
 }
-.vcard-fake { border-left: 3px solid var(--fake); }
-.vcard-real { border-left: 3px solid var(--real); }
+.verdict-card.fake { border-left: 4px solid var(--fake); }
+.verdict-card.real { border-left: 4px solid var(--real); }
 
-.vcard-tag {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.58rem;
-    letter-spacing: 3px;
-    color: var(--textdim);
+.verdict-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 0.6rem;
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
 }
-.vlabel-fake {
-    font-family: 'Space Mono', monospace;
-    font-size: 2.6rem;
+
+.verdict-result-fake {
+    font-size: 3rem;
     font-weight: 700;
     color: var(--fake);
-    letter-spacing: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 2rem;
     line-height: 1;
-    margin-bottom: 1.4rem;
 }
-.vlabel-real {
-    font-family: 'Space Mono', monospace;
-    font-size: 2.6rem;
+.verdict-result-real {
+    font-size: 3rem;
     font-weight: 700;
     color: var(--real);
-    letter-spacing: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 2rem;
     line-height: 1;
-    margin-bottom: 1.4rem;
 }
 
-.metric-row { margin-bottom: 1.2rem; }
-.metric-key {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.58rem;
-    letter-spacing: 2.5px;
-    color: var(--textdim);
+.metric-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    margin-bottom: 0.25rem;
+    color: var(--dim);
+    margin-bottom: 0.3rem;
+    font-family: 'JetBrains Mono', monospace;
 }
-.metric-val {
-    font-family: 'Space Mono', monospace;
-    font-size: 1.6rem;
-    color: #e8eeff;
+.metric-value {
+    font-size: 2rem;
     font-weight: 700;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 0.5rem;
     line-height: 1;
 }
 .bar-track {
     background: var(--border);
-    border-radius: 3px;
-    height: 4px;
-    margin-top: 6px;
+    border-radius: 4px;
+    height: 6px;
+    margin-bottom: 1.5rem;
     overflow: hidden;
 }
-.bar-fake { background: var(--fake); height: 4px; border-radius: 3px; transition: width 0.8s ease; }
-.bar-real { background: var(--real); height: 4px; border-radius: 3px; transition: width 0.8s ease; }
+.bar-fill-fake { background: var(--fake); height: 6px; border-radius: 4px; }
+.bar-fill-real { background: var(--real); height: 6px; border-radius: 4px; }
 
-.vfootnote {
-    margin-top: 1.4rem;
-    padding-top: 1rem;
+.verdict-footnote {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--dim);
+    line-height: 1.9;
     border-top: 1px solid var(--border);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--muted);
-    line-height: 1.8;
-}
-
-/* ── INFO BOX ── */
-.ibox {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 8px;
-    padding: 1rem 1.2rem;
-    font-size: 0.83rem;
-    color: var(--textdim);
-    line-height: 1.6;
+    padding-top: 1.25rem;
+    margin-top: 0.5rem;
 }
 
 /* ── CAPTION ── */
-.cap {
-    font-size: 0.7rem;
-    color: var(--textdim);
+.img-caption {
+    font-size: 0.85rem;
+    color: var(--dim);
     text-align: center;
-    margin-top: 0.6rem;
-    line-height: 1.6;
-    font-style: italic;
+    margin-top: 0.5rem;
+    line-height: 1.5;
 }
 
 /* ── DIVIDER ── */
-.divrow {
+.divider {
     border: none;
     border-top: 1px solid var(--border);
-    margin: 1.8rem 0;
+    margin: 2.5rem 0;
 }
 
 /* ── FOOTER ── */
-.footer {
+.page-footer {
     text-align: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--muted);
-    padding: 1.5rem 0 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--dim);
+    padding: 2rem 0 1rem;
     border-top: 1px solid var(--border);
-    margin-top: 2.5rem;
-    letter-spacing: 1px;
+    margin-top: 3rem;
 }
-.footer a { color: var(--accent); text-decoration: none; }
-
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-.stDeployButton {display: none;}
-header {visibility: hidden;}
-
-/* tighten streamlit default padding */
-.block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.page-footer a { color: var(--accent); text-decoration: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -305,21 +242,15 @@ def prepare_inputs(pil_image):
 
 
 # ───────────────────────────────────────────────
-# SALIENCY  (integrated gradients — more visible than vanilla gradients)
+# SALIENCY
 # ───────────────────────────────────────────────
 def compute_saliency(model, rgb_in, dct_in, steps=5):
-    """
-    SmoothGrad — averages gradients over a few noise-augmented inputs.
-    5 passes instead of 20, produces visible heatmaps, ~4x faster than
-    integrated gradients.
-    """
     try:
         noise_level = 0.1
         grad_acc    = np.zeros(rgb_in.shape[:2], dtype=np.float32)
         dct_t       = tf.constant(
             np.expand_dims(dct_in, 0).astype(np.float32)
         )
-
         for _ in range(steps):
             noise  = np.random.normal(0, noise_level, rgb_in.shape).astype(np.float32)
             rgb_t  = tf.Variable(
@@ -342,7 +273,7 @@ def compute_saliency(model, rgb_in, dct_in, steps=5):
 def fig_to_buf(fig):
     buf = io.BytesIO()
     fig.savefig(buf, format="png", bbox_inches="tight",
-                dpi=140, facecolor="#080b12")
+                dpi=140, facecolor="#0d1117")
     buf.seek(0)
     return buf
 
@@ -351,20 +282,14 @@ def fig_to_buf(fig):
 # HEADER
 # ───────────────────────────────────────────────
 st.markdown(
-    '<div class="hdr">'
-    '  <div class="hdr-badge">🔬 &nbsp; Forensic AI Tool</div>'
-    '  <div class="hdr-title">'
-    '    Beyond Binary Detection:<br>'
-    '    <span class="hl">Explainable AI (XAI)</span> Deepfake Localization<br>'
-    '    via Frequency-Aware Segmentation'
-    '  </div>'
-    '  <div class="hdr-sub" style="margin-top:0.7rem;">'
-    '    Dual-stream spatial + frequency domain analysis'
-    '    <span class="hdr-pill">CIFAKE · EfficientNetB0</span>'
-    '    &nbsp;·&nbsp;'
-    '    <a href="https://github.com/Shimu-I/dual-stream-deepfake" target="_blank">'
+    '<div class="page-header">'
+    '  <h1 class="page-title">🔬 Deepfake Detector</h1>'
+    '  <p class="page-sub">'
+    '    Dual-stream spatial + frequency domain analysis &nbsp;·&nbsp; '
+    '    EfficientNetB0 + DCT &nbsp;·&nbsp; '
+    '    <a href="https://github.com/Shimu-I/dual-stream-deepfake" style="color:#58a6ff;">'
     '    github.com/Shimu-I/dual-stream-deepfake</a>'
-    '  </div>'
+    '  </p>'
     '</div>',
     unsafe_allow_html=True
 )
@@ -373,8 +298,7 @@ st.markdown(
 # ───────────────────────────────────────────────
 # UPLOAD
 # ───────────────────────────────────────────────
-st.markdown('<div class="slabel">Step 01 — Upload Image</div>',
-            unsafe_allow_html=True)
+st.markdown('<div class="sec-label">Step 1 — Upload Image</div>', unsafe_allow_html=True)
 
 upload = st.file_uploader(
     "Choose a JPG or PNG image",
@@ -384,10 +308,9 @@ upload = st.file_uploader(
 
 if upload is None:
     st.markdown(
-        '<div class="ibox">'
-        '📂 &nbsp; Upload a JPG or PNG image above to begin forensic analysis. '
-        'The dual-stream model will analyse both spatial pixel features and '
-        'DCT frequency artifacts simultaneously.'
+        '<div class="info-box">'
+        '📂 &nbsp; Upload a JPG or PNG above to begin analysis. '
+        'The model analyses both pixel-level features and DCT frequency artifacts.'
         '</div>',
         unsafe_allow_html=True
     )
@@ -395,24 +318,21 @@ if upload is None:
 
 
 # ───────────────────────────────────────────────
-# PREVIEW + RUN BUTTON
+# PREVIEW + RUN
 # ───────────────────────────────────────────────
 prev_col, btn_col = st.columns([2, 1], gap="large")
 
 with prev_col:
-    st.markdown('<div class="slabel">Preview</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-label">Preview</div>', unsafe_allow_html=True)
     preview = Image.open(upload)
-    st.image(preview, width=320)
+    st.image(preview, width=340)
 
 with btn_col:
-    st.markdown('<div class="slabel">Step 02 — Run Analysis</div>',
-                unsafe_allow_html=True)
+    st.markdown('<div class="sec-label">Step 2 — Run Analysis</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="ibox" style="margin-bottom:1.2rem;">'
-        'Image loaded successfully.<br><br>'
-        'The model will run both streams in parallel and return a '
-        'classification, confidence score, saliency heatmap, and '
-        'DCT frequency map.'
+        '<div class="info-box" style="margin-bottom:1.25rem;">'
+        'Image loaded. Click the button to run both model streams and get a '
+        'classification, confidence score, saliency heatmap, and DCT frequency map.'
         '</div>',
         unsafe_allow_html=True
     )
@@ -443,39 +363,35 @@ with st.spinner("Running dual-stream analysis…"):
 
 
 # ───────────────────────────────────────────────
-# ROW 1 — Original Image | Verdict
+# ROW 1 — Image | Verdict
 # ───────────────────────────────────────────────
-st.markdown('<hr class="divrow">', unsafe_allow_html=True)
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
 col_img, col_verdict = st.columns([1, 1], gap="large")
 
 with col_img:
-    st.markdown('<div class="slabel">Original Image</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-label">Original Image</div>', unsafe_allow_html=True)
     st.image(pil_img, width=min(pil_img.width, 420))
 
 with col_verdict:
-    st.markdown('<div class="slabel">Forensic Verdict</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-label">Result</div>', unsafe_allow_html=True)
 
     icon     = "🚨" if is_fake else "✅"
-    lbl_cls  = "vlabel-fake" if is_fake else "vlabel-real"
-    card_cls = "vcard-fake"  if is_fake else "vcard-real"
-    bar_cls  = "bar-fake"    if is_fake else "bar-real"
+    res_cls  = "verdict-result-fake" if is_fake else "verdict-result-real"
+    card_cls = "fake" if is_fake else "real"
+    bar_cls  = "bar-fill-fake" if is_fake else "bar-fill-real"
 
     st.markdown(
-        f'<div class="vcard {card_cls}">'
-        f'  <div class="vcard-tag">Classification Result</div>'
-        f'  <div class="{lbl_cls}">{icon}&nbsp; {label}</div>'
-        f'  <div class="metric-row">'
-        f'    <div class="metric-key">Confidence</div>'
-        f'    <div class="metric-val">{bar_pct}%</div>'
-        f'    <div class="bar-track">'
-        f'      <div class="{bar_cls}" style="width:{bar_pct}%"></div>'
-        f'    </div>'
+        f'<div class="verdict-card {card_cls}">'
+        f'  <div class="verdict-label">Classification</div>'
+        f'  <div class="{res_cls}">{icon} {label}</div>'
+        f'  <div class="metric-label">Confidence</div>'
+        f'  <div class="metric-value">{bar_pct}%</div>'
+        f'  <div class="bar-track">'
+        f'    <div class="{bar_cls}" style="width:{bar_pct}%"></div>'
         f'  </div>'
-        f'  <div class="metric-row">'
-        f'    <div class="metric-key">Raw Model Score</div>'
-        f'    <div class="metric-val">{score:.4f}</div>'
-        f'  </div>'
-        f'  <div class="vfootnote">'
+        f'  <div class="metric-label">Raw Model Score</div>'
+        f'  <div class="metric-value">{score:.4f}</div>'
+        f'  <div class="verdict-footnote">'
         f'    Score → 0.0 = FAKE &nbsp;|&nbsp; Score → 1.0 = REAL<br>'
         f'    Threshold: 0.5 &nbsp;|&nbsp; FAKE_CLASS_IDX = {FAKE_CLASS_IDX}'
         f'  </div>'
@@ -485,77 +401,74 @@ with col_verdict:
 
 
 # ───────────────────────────────────────────────
-# ROW 2 — Saliency Heatmap | DCT Spectrum
+# ROW 2 — Saliency | DCT
 # ───────────────────────────────────────────────
-st.markdown('<hr class="divrow">', unsafe_allow_html=True)
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
 col_heat, col_dct = st.columns([1, 1], gap="large")
 
 with col_heat:
-    st.markdown('<div class="slabel">Spatial Attention — Integrated Gradients</div>',
+    st.markdown('<div class="sec-label">Spatial Attention — Saliency Map</div>',
                 unsafe_allow_html=True)
 
     if heatmap is not None:
-        h, w       = img_display.shape[:2]
-        hm_r       = cv2.resize(heatmap, (w, h))
-        hm_s       = cv2.GaussianBlur(hm_r, (9, 9), 0)
-        cmap       = plt.get_cmap("RdYlBu_r")
-        colored    = (cmap(hm_s)[:, :, :3] * 255).astype(np.uint8)
-        overlay    = cv2.addWeighted(img_display.astype(np.uint8), 0.55,
-                                     colored, 0.45, 0)
+        h, w    = img_display.shape[:2]
+        hm_r    = cv2.resize(heatmap, (w, h))
+        hm_s    = cv2.GaussianBlur(hm_r, (9, 9), 0)
+        cmap    = plt.get_cmap("RdYlBu_r")
+        colored = (cmap(hm_s)[:, :, :3] * 255).astype(np.uint8)
+        overlay = cv2.addWeighted(img_display.astype(np.uint8), 0.55,
+                                  colored, 0.45, 0)
 
-        fig = plt.figure(figsize=(9, 4), facecolor="#080b12")
+        fig = plt.figure(figsize=(9, 4), facecolor="#0d1117")
         gs  = gridspec.GridSpec(1, 2, figure=fig, wspace=0.12)
 
         ax0 = fig.add_subplot(gs[0])
         ax0.imshow(overlay)
-        ax0.set_title("Activation Overlay", color="#6070a0",
-                      fontsize=8.5, pad=8, fontfamily="monospace")
+        ax0.set_title("Activation Overlay", color="#8b949e",
+                      fontsize=10, pad=8, fontfamily="monospace")
         ax0.axis("off")
 
         ax1 = fig.add_subplot(gs[1])
         im  = ax1.imshow(hm_s, cmap="RdYlBu_r", vmin=0, vmax=1)
-        ax1.set_title("Gradient Attribution Map", color="#6070a0",
-                      fontsize=8.5, pad=8, fontfamily="monospace")
+        ax1.set_title("Gradient Attribution", color="#8b949e",
+                      fontsize=10, pad=8, fontfamily="monospace")
         ax1.axis("off")
         cbar = fig.colorbar(im, ax=ax1, fraction=0.045, pad=0.03)
-        cbar.ax.tick_params(colors="#3a4060", labelsize=7)
-        cbar.outline.set_edgecolor("#1c2236")
+        cbar.ax.tick_params(colors="#8b949e", labelsize=8)
+        cbar.outline.set_edgecolor("#30363d")
 
         st.image(fig_to_buf(fig), use_container_width=True)
         plt.close(fig)
         st.markdown(
-            '<div class="cap">'
-            '🔴 Red / Yellow = high activation (regions driving the prediction) &nbsp;·&nbsp;'
-            '🔵 Blue = low activation (neutral areas)'
+            '<div class="img-caption">'
+            '🔴 Red/Yellow = high activation (drives the prediction) &nbsp;·&nbsp; 🔵 Blue = low activation'
             '</div>',
             unsafe_allow_html=True
         )
     else:
         st.markdown(
-            '<div class="ibox">⚠️ Saliency map could not be computed for this model configuration.</div>',
+            '<div class="info-box">⚠️ Saliency map could not be computed for this model.</div>',
             unsafe_allow_html=True
         )
 
 with col_dct:
-    st.markdown('<div class="slabel">Frequency Domain — DCT Spectrum</div>',
+    st.markdown('<div class="sec-label">Frequency Domain — DCT Spectrum</div>',
                 unsafe_allow_html=True)
 
-    fig2, ax2 = plt.subplots(figsize=(4.5, 4.5), facecolor="#080b12")
+    fig2, ax2 = plt.subplots(figsize=(4.5, 4.5), facecolor="#0d1117")
     im2 = ax2.imshow(dct_in[:, :, 0], cmap="inferno", vmin=0, vmax=1)
-    ax2.set_title("DCT Coefficient Map", color="#6070a0",
-                  fontsize=8.5, pad=8, fontfamily="monospace")
+    ax2.set_title("DCT Coefficient Map", color="#8b949e",
+                  fontsize=10, pad=8, fontfamily="monospace")
     ax2.axis("off")
     cbar2 = fig2.colorbar(im2, ax=ax2, fraction=0.045, pad=0.03)
-    cbar2.ax.tick_params(colors="#3a4060", labelsize=7)
-    cbar2.outline.set_edgecolor("#1c2236")
+    cbar2.ax.tick_params(colors="#8b949e", labelsize=8)
+    cbar2.outline.set_edgecolor("#30363d")
     fig2.tight_layout(pad=1.2)
     st.image(fig_to_buf(fig2), use_container_width=True)
     plt.close(fig2)
     st.markdown(
-        '<div class="cap">'
-        'Periodic checkerboard patterns concentrated in the top-left quadrant '
-        'indicate AI upsampling artifacts — invisible to the human eye but '
-        'detectable in frequency space.'
+        '<div class="img-caption">'
+        'Checkerboard patterns in the top-left quadrant indicate AI upsampling artifacts.'
         '</div>',
         unsafe_allow_html=True
     )
@@ -565,9 +478,8 @@ with col_dct:
 # FOOTER
 # ───────────────────────────────────────────────
 st.markdown(
-    '<div class="footer">'
-    'Beyond Binary Detection &nbsp;·&nbsp; '
-    'XAI Deepfake Localization via Frequency-Aware Segmentation &nbsp;·&nbsp; '
+    '<div class="page-footer">'
+    'Beyond Binary Detection &nbsp;·&nbsp; XAI Deepfake Localization &nbsp;·&nbsp; '
     '<a href="https://github.com/Shimu-I/dual-stream-deepfake">'
     'github.com/Shimu-I/dual-stream-deepfake</a>'
     '</div>',
